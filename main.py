@@ -9,9 +9,33 @@ class HelloNameBase(BaseModel):
     message: str
 
 
+class MethodGetter(BaseModel):
+    method: str
+
+
 @app.get("/")
 def root():
     return HelloNameBase(message="Hello World during the coronavirus pandemic!")
+
+
+@app.get("/method", response_model=MethodGetter)
+def method():
+    return MethodGetter(method='GET')
+
+
+@app.post("/method", response_model=MethodGetter)
+def method():
+    return MethodGetter(method='POST')
+
+
+@app.put("/method", response_model=MethodGetter)
+def method():
+    return MethodGetter(method='PUT')
+
+
+@app.delete("/method", response_model=MethodGetter)
+def method():
+    return MethodGetter(method='DELETE')
 
 
 @app.get("/hello/{name}", response_model=HelloNameBase)
