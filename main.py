@@ -19,22 +19,22 @@ def root():
 
 
 @app.get("/method", response_model=MethodGetter)
-def method():
+def method_get():
     return MethodGetter(method='GET')
 
 
 @app.post("/method", response_model=MethodGetter)
-def method():
+def method_post():
     return MethodGetter(method='POST')
 
 
 @app.put("/method", response_model=MethodGetter)
-def method():
+def method_put():
     return MethodGetter(method='PUT')
 
 
 @app.delete("/method", response_model=MethodGetter)
-def method():
+def method_delete():
     return MethodGetter(method='DELETE')
 
 
