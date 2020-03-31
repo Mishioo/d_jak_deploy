@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 
 app = FastAPI()
+app.patient_counter = 0
 
 
 class Message(BaseModel):
@@ -11,6 +12,24 @@ class Message(BaseModel):
 
 class MethodGetter(BaseModel):
     method: str
+
+
+class Patient(BaseModel):
+    name: str
+    surname: str
+
+
+class PatientResponse(BaseModel):
+    id: int
+    patient: dict
+
+
+# Stwórz ścieżkę `/patient`, która przyjmie request z metodą `POST`
+# i danymi w formacie json w postaci:
+# `{"name": "IMIE", "surename": "NAZWISKO"}`
+# i zwróci JSON w postaci:
+# `{"id": N, "patient": {"name": "IMIE", "surename": "NAZWISKO"}}`
+# Gdzie `N` jest kolejnym numerem zgłoszonej osoby
 
 
 @app.get("/")
@@ -36,6 +55,12 @@ def method_put():
 @app.delete("/method", response_model=MethodGetter)
 def method_delete():
     return MethodGetter(method='DELETE')
+
+
+@app.post('/patient')
+def new_patient(patient: Patient):
+    app.patient_counter += 1
+    return PatientResponse(id=app.patient_counter, patient=patient.dict())
 
 
 @app.get("/hello/{name}", response_model=Message)
