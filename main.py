@@ -24,14 +24,6 @@ class PatientResponse(BaseModel):
     patient: dict
 
 
-# Stwórz ścieżkę `/patient`, która przyjmie request z metodą `POST`
-# i danymi w formacie json w postaci:
-# `{"name": "IMIE", "surename": "NAZWISKO"}`
-# i zwróci JSON w postaci:
-# `{"id": N, "patient": {"name": "IMIE", "surename": "NAZWISKO"}}`
-# Gdzie `N` jest kolejnym numerem zgłoszonej osoby
-
-
 @app.get("/")
 def root():
     return Message(message="Hello World during the coronavirus pandemic!")
@@ -57,7 +49,7 @@ def method_delete():
     return MethodGetter(method='DELETE')
 
 
-@app.post('/patient')
+@app.post('/patient', response_model=PatientResponse)
 def new_patient(patient: Patient):
     app.patient_counter += 1
     return PatientResponse(id=app.patient_counter, patient=patient.dict())
