@@ -18,12 +18,12 @@ class MethodGetter(BaseModel):
 
 class Patient(BaseModel):
     name: str
-    surname: str
+    surename: str  # misspell specified in requirements
 
 
 class PatientResponse(BaseModel):
     id: int
-    patient: dict
+    patient: Patient
 
 
 @app.get("/")
