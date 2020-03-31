@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 
@@ -67,7 +67,7 @@ def patient_get(pk: int):
         patient = app.patients[pk]
         return Patient(**patient)
     except KeyError:
-        return Response(status_code=204)
+        return JSONResponse(status_code=204, content={})
 
 
 @app.get("/hello/{name}", response_model=Message)
