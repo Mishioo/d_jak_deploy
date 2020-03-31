@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 app.patient_counter = 0
+app.patients = {}
 
 
 class Message(BaseModel):
@@ -51,8 +52,10 @@ def method_delete():
 
 @app.post('/patient', response_model=PatientResponse)
 def new_patient(patient: Patient):
+    response = PatientResponse(id=app.patient_counter, patient=patient.dict())
+    app.patients[app.patient_counter] = patient.dict()
     app.patient_counter += 1
-    return PatientResponse(id=app.patient_counter, patient=patient.dict())
+    return response
 
 
 @app.get("/hello/{name}", response_model=Message)
