@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 
@@ -56,6 +57,17 @@ def new_patient(patient: Patient):
     app.patients[app.patient_counter] = patient.dict()
     app.patient_counter += 1
     return response
+
+
+@app.get(
+    '/patient/{pk}', response_model=Patient, responses={404: {"model": Message}}
+ )
+def patient_get(pk: int):
+    try:
+        patient = app.patients[pk]
+        return Patient(**patient)
+    except KeyError:
+        return JSONResponse(status_code=404, content={"message": "Item not found"})
 
 
 @app.get("/hello/{name}", response_model=Message)
