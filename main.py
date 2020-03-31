@@ -5,7 +5,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 
-class HelloNameBase(BaseModel):
+class Message(BaseModel):
     message: str
 
 
@@ -15,7 +15,7 @@ class MethodGetter(BaseModel):
 
 @app.get("/")
 def root():
-    return HelloNameBase(message="Hello World during the coronavirus pandemic!")
+    return Message(message="Hello World during the coronavirus pandemic!")
 
 
 @app.get("/method", response_model=MethodGetter)
@@ -38,6 +38,6 @@ def method_delete():
     return MethodGetter(method='DELETE')
 
 
-@app.get("/hello/{name}", response_model=HelloNameBase)
+@app.get("/hello/{name}", response_model=Message)
 def hello_name(name: str):
-    return HelloNameBase(message=f"Hello {name}")
+    return Message(message=f"Hello {name}")
