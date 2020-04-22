@@ -116,7 +116,7 @@ def login_get(response: Response, credentials: HTTPBasicCredentials = Depends(se
 def logout(session_token: str = Cookie(None)):
     print("in logout")
     del app.sessions[session_token]
-    return RedirectResponse(url="/welcome", status_code=status.HTTP_302_FOUND)
+    return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
 
 @app.get("/test")
