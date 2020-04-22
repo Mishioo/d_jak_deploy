@@ -9,7 +9,7 @@ from starlette import status
 app = FastAPI()
 app.patient_counter = 0
 app.patients = {}
-app.users = {'trudnY': 'PaC13Nt'}
+app.users = {"trudnY": "PaC13Nt"}
 app.sessions = {}
 
 security = HTTPBasic()
@@ -71,7 +71,8 @@ def create_token(username: str, password: str) -> str:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid user or password"
         )
-    token = hashlib.sha256(f"{username}{password}{SECRET_KEY}").hexdigest()
+    token = hashlib.sha256(bytes(f"{username}{password}{SECRET_KEY}", "utf-8"))
+    token = token.hexdigest()
     app.sessions[token] = username
     return token
 
