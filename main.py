@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request
+import base64
+
+from fastapi import FastAPI, Request, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -56,3 +58,16 @@ def patient_get(pk: int):
 @app.get("/hello/{name}")
 def hello_name(name: str):
     return {"message": f"Hello {name}"}
+
+
+def decode_basic_auth(auth):
+    encoded = bytes(auth[6:], "ascii")
+    decoded = base64.b64decode(encoded).decode("utf-8")
+    u, p = decoded.split(":")
+    return {"username": u, "password": p}
+
+
+@app.post("/login")
+def login(authorization: str = Header(None)):
+    auth = decode_basic_auth(authorization)
+    return "{username} authorized with {password}".format(**auth)
