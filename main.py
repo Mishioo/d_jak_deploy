@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -6,14 +6,6 @@ from pydantic import BaseModel
 app = FastAPI()
 app.patient_counter = 0
 app.patients = {}
-
-
-class Message(BaseModel):
-    message: str
-
-
-class MethodGetter(BaseModel):
-    method: str
 
 
 class Patient(BaseModel):
@@ -28,30 +20,18 @@ class PatientResponse(BaseModel):
 
 @app.get("/")
 def root():
-    return Message(message="Hello World during the coronavirus pandemic!")
+    return {"message": "Hello World during the coronavirus pandemic!"}
 
 
-@app.get("/method", response_model=MethodGetter)
-def method_get():
-    return MethodGetter(method='GET')
+@app.get("/method")
+@app.post("/method")
+@app.put("/method")
+@app.delete("/method")
+def method(request: Request):
+    return {"method": request.method}
 
 
-@app.post("/method", response_model=MethodGetter)
-def method_post():
-    return MethodGetter(method='POST')
-
-
-@app.put("/method", response_model=MethodGetter)
-def method_put():
-    return MethodGetter(method='PUT')
-
-
-@app.delete("/method", response_model=MethodGetter)
-def method_delete():
-    return MethodGetter(method='DELETE')
-
-
-@app.post('/patient', response_model=PatientResponse)
+@app.post("/patient", response_model=PatientResponse)
 def new_patient(patient: Patient):
     response = PatientResponse(id=app.patient_counter, patient=patient.dict())
     app.patients[app.patient_counter] = patient.dict()
@@ -59,9 +39,7 @@ def new_patient(patient: Patient):
     return response
 
 
-@app.get(
-    '/patient/{pk}', response_model=Patient, responses={204: {}}
- )
+@app.get("/patient/{pk}", response_model=Patient, responses={204: {}})
 def patient_get(pk: int):
     try:
         patient = app.patients[pk]
@@ -70,6 +48,6 @@ def patient_get(pk: int):
         return JSONResponse(status_code=204, content={})
 
 
-@app.get("/hello/{name}", response_model=Message)
+@app.get("/hello/{name}")
 def hello_name(name: str):
-    return Message(message=f"Hello {name}")
+    return {"message": f"Hello {name}"}
