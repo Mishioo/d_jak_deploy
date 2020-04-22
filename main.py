@@ -1,13 +1,19 @@
-import base64
+import hashlib
 
-from fastapi import FastAPI, Request, Header
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Cookie, Depends, HTTPException
+from fastapi.responses import Response, JSONResponse, RedirectResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
-
+from starlette import status
 
 app = FastAPI()
 app.patient_counter = 0
 app.patients = {}
+app.users = {'trudnY': 'PaC13Nt'}
+app.sessions = {}
+
+security = HTTPBasic()
+SECRET_KEY = "Sphinx of black quartz, judge my vow."
 
 
 class Patient(BaseModel):
@@ -60,14 +66,26 @@ def hello_name(name: str):
     return {"message": f"Hello {name}"}
 
 
-def decode_basic_auth(auth):
-    encoded = bytes(auth[6:], "ascii")
-    decoded = base64.b64decode(encoded).decode("utf-8")
-    u, p = decoded.split(":")
-    return {"username": u, "password": p}
+def create_token(username: str, password: str) -> str:
+    if username not in app.users or not password == app.users[username]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid user or password"
+        )
+    token = hashlib.sha256(f"{username}{password}{SECRET_KEY}").hexdigest()
+    app.sessions[token] = username
+    return token
 
 
 @app.post("/login")
-def login(authorization: str = Header(None)):
-    auth = decode_basic_auth(authorization)
-    return "{username} authorized with {password}".format(**auth)
+def login(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
+    session_token = create_token(credentials.username, credentials.password)
+    response.set_cookie(key="session_token", value=session_token)
+    return RedirectResponse(url="/welcome", status_code=status.HTTP_302_FOUND)
+
+
+@app.get("/test")
+def test_cookie(session_token: str = Cookie(None)):
+    if session_token:
+        return {"user": app.sessions[session_token], "token": session_token}
+    else:
+        return {"user": "NO USER", "token": "NO SESSION"}
