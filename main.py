@@ -23,6 +23,11 @@ def root():
     return {"message": "Hello World during the coronavirus pandemic!"}
 
 
+@app.get("/welcome")
+def welcome():
+    return {"message": "Welcome to arewedancer!"}
+
+
 @app.get("/method")
 @app.post("/method")
 @app.put("/method")
