@@ -69,7 +69,7 @@ def hello_name(name: str):
 def create_token(username: str, password: str) -> str:
     if username not in app.users or not password == app.users[username]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid user or password"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user or password"
         )
     token = hashlib.sha256(bytes(f"{username}{password}{SECRET_KEY}", "utf-8"))
     token = token.hexdigest()
