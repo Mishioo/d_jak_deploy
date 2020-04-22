@@ -44,7 +44,17 @@ def method(request: Request):
     return {"method": request.method}
 
 
-@app.post("/patient", response_model=PatientResponse)
+def authorize(session_token: str = Cookie(None)):
+    print(session_token)
+    if not session_token or (session_token not in app.sessions):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Login to get access to this resource.",
+        )
+    return True
+
+
+@app.post("/patient", response_model=PatientResponse, dependencies=[Depends(authorize)])
 def new_patient(patient: Patient):
     response = PatientResponse(id=app.patient_counter, patient=patient.dict())
     app.patients[app.patient_counter] = patient.dict()
@@ -52,7 +62,12 @@ def new_patient(patient: Patient):
     return response
 
 
-@app.get("/patient/{pk}", response_model=Patient, responses={204: {}})
+@app.get(
+    "/patient/{pk}",
+    response_model=Patient,
+    responses={204: {}},
+    dependencies=[Depends(authorize)],
+)
 def patient_get(pk: int):
     try:
         patient = app.patients[pk]
@@ -67,20 +82,40 @@ def hello_name(name: str):
 
 
 def create_token(username: str, password: str) -> str:
+    token = hashlib.sha256(bytes(f"{username}{password}{SECRET_KEY}", "utf-8"))
+    token = token.hexdigest()
+    return token
+
+
+def authenticate(username: str, password: str) -> str:
     if username not in app.users or not password == app.users[username]:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user or password"
         )
-    token = hashlib.sha256(bytes(f"{username}{password}{SECRET_KEY}", "utf-8"))
-    token = token.hexdigest()
+    token = create_token(username, password)
     app.sessions[token] = username
     return token
 
 
 @app.post("/login")
-def login(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
-    session_token = create_token(credentials.username, credentials.password)
+def login(credentials: HTTPBasicCredentials = Depends(security)):
+    session_token = authenticate(credentials.username, credentials.password)
+    response = RedirectResponse(url="/welcome", status_code=status.HTTP_302_FOUND)
     response.set_cookie(key="session_token", value=session_token)
+    return response
+
+
+@app.get("/login")
+def login_get(response: Response, credentials: HTTPBasicCredentials = Depends(security)):
+    session_token = authenticate(credentials.username, credentials.password)
+    response.set_cookie(key="session_token", value=session_token)
+    return {"username": credentials.username, "token": session_token}
+
+
+@app.post("/logout", dependencies=[Depends(authorize)])
+def logout(session_token: str = Cookie(None)):
+    print("in logout")
+    del app.sessions[session_token]
     return RedirectResponse(url="/welcome", status_code=status.HTTP_302_FOUND)
 
 
