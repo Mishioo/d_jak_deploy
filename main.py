@@ -3,6 +3,7 @@ import hashlib
 from fastapi import FastAPI, Request, Cookie, Depends, HTTPException
 from fastapi.responses import Response, JSONResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from starlette import status
 
@@ -15,6 +16,8 @@ app.sessions = {}
 security = HTTPBasic()
 SECRET_KEY = "Sphinx of black quartz, judge my vow."
 
+templates = Jinja2Templates(directory="templates")
+
 
 class Patient(BaseModel):
     name: str
@@ -26,24 +29,6 @@ class PatientResponse(BaseModel):
     patient: Patient
 
 
-@app.get("/")
-def root():
-    return {"message": "Hello World during the coronavirus pandemic!"}
-
-
-@app.get("/welcome")
-def welcome():
-    return {"message": "Welcome to arewedancer!"}
-
-
-@app.get("/method")
-@app.post("/method")
-@app.put("/method")
-@app.delete("/method")
-def method(request: Request):
-    return {"method": request.method}
-
-
 def authorize(session_token: str = Cookie(None)):
     print(session_token)
     if not session_token or (session_token not in app.sessions):
@@ -52,6 +37,26 @@ def authorize(session_token: str = Cookie(None)):
             detail="Login to get access to this resource.",
         )
     return True
+
+
+@app.get("/")
+def root():
+    return {"message": "Hello World during the coronavirus pandemic!"}
+
+
+@app.get("/welcome", dependencies=[Depends(authorize)])
+def welcome(request: Request, session_token: str = Cookie(None)):
+    return templates.TemplateResponse(
+        "welcome.html", {"request": request, "user": app.sessions[session_token]}
+    )
+
+
+@app.get("/method")
+@app.post("/method")
+@app.put("/method")
+@app.delete("/method")
+def method(request: Request):
+    return {"method": request.method}
 
 
 @app.post("/patient", response_model=PatientResponse, dependencies=[Depends(authorize)])
