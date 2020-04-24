@@ -11,14 +11,13 @@ router = APIRouter()
 router.patients = {}
 
 
-
 @router.post("/patient")
 def new_patient(patient: Patient):
     identifier = uuid.uuid4().hex
     router.patients[identifier] = patient.dict()
     return RedirectResponse(
         url=f"/patient/{identifier}",
-        status_code=status.HTTP_201_CREATED,
+        status_code=status.HTTP_302_FOUND,
     )
 
 
