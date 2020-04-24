@@ -16,7 +16,6 @@ SECRET_KEY = "Sphinx of black quartz, judge my vow."
 
 
 def authorize(session_token: str = Cookie(None)):
-    print(session_token)
     if not session_token or (session_token not in router.sessions):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
