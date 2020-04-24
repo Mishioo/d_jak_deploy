@@ -1,4 +1,5 @@
 from typing import Optional
+import uuid
 
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -9,7 +10,6 @@ from .security import current_user
 from ..models import Patient, PatientResponse
 
 router = APIRouter()
-router.patient_counter = 0
 router.patients = {}
 
 templates = Jinja2Templates(directory="templates")
@@ -17,16 +17,16 @@ templates = Jinja2Templates(directory="templates")
 
 @router.post("/patient", response_model=PatientResponse)
 def new_patient(patient: Patient):
-    router.patients[router.patient_counter] = patient.dict()
-    router.patient_counter += 1
+    identifier = uuid.uuid4().hex
+    router.patients[identifier] = patient.dict()
     return RedirectResponse(
-        url=f"/patient/{router.patient_counter - 1}",
+        url=f"/patient/{identifier}",
         status_code=status.HTTP_201_CREATED,
     )
 
 
 @router.get("/patient/{pk}", response_model=Patient, responses={204: {}})
-def patient_get(pk: int):
+def patient_get(pk: str):
     try:
         patient = router.patients[pk]
         return Patient(**patient)
