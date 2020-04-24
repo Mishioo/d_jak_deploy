@@ -1,18 +1,15 @@
-from typing import Optional, Dict
+from typing import Dict
 import uuid
 
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from starlette import status
 
-from .security import current_user
 from ..models import Patient
 
 router = APIRouter()
 router.patients = {}
 
-templates = Jinja2Templates(directory="templates")
 
 
 @router.post("/patient")
@@ -45,10 +42,3 @@ def patient_delete(pk: str):
         del router.patients[pk]
     except KeyError:
         pass
-
-
-@router.get("/welcome")
-def welcome(request: Request, user: Optional[str] = Depends(current_user)):
-    return templates.TemplateResponse(
-        "welcome.html", {"request": request, "user": user}
-    )
