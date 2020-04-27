@@ -8,7 +8,7 @@ from starlette import status
 
 
 router = APIRouter()
-router.users = {"trudnY": "PaC13Nt"}
+router.users = {"trudnY": "PaC13Nt", "admin": "admin"}
 router.sessions = {}
 
 security = HTTPBasic()
@@ -68,4 +68,6 @@ def login_get(
 def logout(session_token: str = Cookie(None)):
     print("in logout")
     del router.sessions[session_token]
-    return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    response.delete_cookie("session_token")
+    return response
