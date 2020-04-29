@@ -4,8 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from ..models import Track, Album
-
+from ..models import Track, Album, NewAlbumRequest
 
 router = APIRouter()
 router.db_connection = None
@@ -62,18 +61,18 @@ async def composers_tracks(composer_name: str, db: sql.Connection = Depends(get_
 
 
 @router.post("/albums", status_code=status.HTTP_201_CREATED, response_model=Album)
-async def new_album(title: str, artist_id: int, db: sql.Connection = Depends(get_db)):
+async def new_album(album: NewAlbumRequest, db: sql.Connection = Depends(get_db)):
     artist = db.execute(
-        "SELECT name FROM artists WHERE artistid = ?", (artist_id, )
+        "SELECT name FROM artists WHERE artistid = ?", (album.artist_id, )
     ).fetchone()
     if not artist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"error": f"No artist with this Id: {artist_id}"}},
+            detail={"error": {"error": f"No artist with this Id: {album.artist_id}"}},
         )
     cursor = db.execute(
         "INSERT INTO albums (title, artistid) VALUES (?, ?)",
-        (title, artist_id),
+        (album.title, album.artist_id),
     )
     db.commit()
     album = db.execute(

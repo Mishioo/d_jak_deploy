@@ -20,6 +20,11 @@ class Track(BaseModel):
     UnitPrice: float
 
 
+class NewAlbumRequest(BaseModel):
+    title: str
+    artist_id: int
+
+
 class Album(BaseModel):
     AlbumId: int
     Title: str
