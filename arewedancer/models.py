@@ -18,3 +18,9 @@ class Track(BaseModel):
     Milliseconds: int
     Bytes: Optional[int]
     UnitPrice: float
+
+
+class Album(BaseModel):
+    AlbumId: int
+    Title: str
+    ArtistId: int
