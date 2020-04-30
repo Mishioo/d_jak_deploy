@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -62,3 +62,8 @@ class CustomerExpense(BaseModel):
     Email: str
     Phone: Optional[str]
     Sum: float = Field(..., alias="Total")
+
+
+class GenreSales(BaseModel):
+    Name: str
+    Sum: int = Field(..., alias="number")

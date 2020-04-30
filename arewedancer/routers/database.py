@@ -4,8 +4,10 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from ..models import Track, Album, NewAlbumRequest, Customer, CustomerUpdateRequest, \
-    CustomerExpense
+from ..models import (
+    Track, Album, NewAlbumRequest, Customer, CustomerUpdateRequest,
+    CustomerExpense, GenreSales
+)
 
 router = APIRouter()
 router.db_connection = None
@@ -135,19 +137,28 @@ def customers_sales(db):
         "ON c.customerid = i.customerid "
         "ORDER BY i.total DESC, c.customerid;"
     ).fetchall()
-    return expences
+    return [CustomerExpense(**entry).dict(by_alias=False) for entry in expences]
+
+
+def genres_sales(db):
+    genres = db.execute(
+        "SELECT g.name, SUM(i.quantity) AS number "
+        "FROM tracks t "
+        "JOIN invoice_items i ON i.trackid = t.trackid "
+        "JOIN genres g ON g.genreid = t.genreid "
+        "group by g.genreid "
+        "ORDER BY number DESC, g.name;"
+    ).fetchall()
+    return [GenreSales(**entry).dict(by_alias=False) for entry in genres]
 
 
 SALES_OPERATIONS = {
-    "customers": customers_sales
+    "customers": customers_sales,
+    "genres": genres_sales,
 }
 
 
-@router.get(
-    "/sales",
-    response_model=List[CustomerExpense],
-    response_model_by_alias=False,
-)
+@router.get("/sales")
 async def sales(category: str, db: sql.Connection = Depends(get_db)):
     try:
         return SALES_OPERATIONS[category](db)
