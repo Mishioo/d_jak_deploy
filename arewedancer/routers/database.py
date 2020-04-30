@@ -5,8 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from ..models import (
-    Track, Album, NewAlbumRequest, Customer, CustomerUpdateRequest,
-    CustomerExpense, GenreSales
+    Track,
+    Album,
+    NewAlbumRequest,
+    Customer,
+    CustomerUpdateRequest,
+    CustomerExpense,
+    GenreSales,
 )
 
 router = APIRouter()
@@ -15,7 +20,7 @@ router.db_connection = None
 
 @router.on_event("startup")
 async def startup():
-    router.db_connection = sql.connect('arewedancer/chinook.db')
+    router.db_connection = sql.connect("arewedancer/chinook.db")
 
 
 @router.on_event("shutdown")
@@ -29,30 +34,28 @@ async def get_db():
     try:
         yield router.db_connection
     finally:
-        router.db_connection. row_factory = factory
+        router.db_connection.row_factory = factory
 
 
 @router.get("/tracks", response_model=List[Track])
 async def tracks(
-        page: int = 0, per_page: int = 10, db: sql.Connection = Depends(get_db)
+    page: int = 0, per_page: int = 10, db: sql.Connection = Depends(get_db)
 ):
     data = db.execute(
         "SELECT trackid, name, albumid, mediatypeid, genreid, composer, milliseconds, "
         "bytes, unitprice FROM tracks ORDER BY trackid LIMIT ? OFFSET ?;",
-        (per_page, page * per_page)
+        (per_page, page * per_page),
     ).fetchall()
     return data
 
 
 @router.get(
-    "/tracks/composers/",
-    response_model=List[str],
+    "/tracks/composers/", response_model=List[str],
 )
 async def composers_tracks(composer_name: str, db: sql.Connection = Depends(get_db)):
     db.row_factory = lambda c, x: x[0]
     data = db.execute(
-        "SELECT name FROM tracks WHERE composer = ? ORDER BY name;",
-        (composer_name, )
+        "SELECT name FROM tracks WHERE composer = ? ORDER BY name;", (composer_name,)
     ).fetchall()
     if not data:
         raise HTTPException(
@@ -66,7 +69,7 @@ async def composers_tracks(composer_name: str, db: sql.Connection = Depends(get_
 @router.post("/albums", status_code=status.HTTP_201_CREATED, response_model=Album)
 async def new_album(album: NewAlbumRequest, db: sql.Connection = Depends(get_db)):
     artist = db.execute(
-        "SELECT name FROM artists WHERE artistid = ?", (album.artist_id, )
+        "SELECT name FROM artists WHERE artistid = ?;", (album.artist_id,)
     ).fetchone()
     if not artist:
         raise HTTPException(
@@ -74,13 +77,13 @@ async def new_album(album: NewAlbumRequest, db: sql.Connection = Depends(get_db)
             detail={"error": {"error": f"No artist with this Id: {album.artist_id}"}},
         )
     cursor = db.execute(
-        "INSERT INTO albums (title, artistid) VALUES (?, ?)",
+        "INSERT INTO albums (title, artistid) VALUES (?, ?);",
         (album.title, album.artist_id),
     )
     db.commit()
     album = db.execute(
-        "SELECT albumid, title, artistid FROM albums WHERE albumid = ?",
-        (cursor.lastrowid, )
+        "SELECT albumid, title, artistid FROM albums WHERE albumid = ?;",
+        (cursor.lastrowid,),
     ).fetchone()
     return album
 
@@ -88,8 +91,7 @@ async def new_album(album: NewAlbumRequest, db: sql.Connection = Depends(get_db)
 @router.get("/albums/{album_id}", response_model=Album)
 async def gat_album_by_id(album_id: int, db: sql.Connection = Depends(get_db)):
     album = db.execute(
-        "SELECT albumid, title, artistid FROM albums WHERE albumid = ?",
-        (album_id, ),
+        "SELECT albumid, title, artistid FROM albums WHERE albumid = ?;", (album_id,),
     ).fetchone()
     if not album:
         raise HTTPException(
@@ -101,12 +103,12 @@ async def gat_album_by_id(album_id: int, db: sql.Connection = Depends(get_db)):
 
 @router.put("/customers/{customer_id}", response_model=Customer)
 async def update_customer(
-        customer_id: int,
-        customer_data: CustomerUpdateRequest,
-        db: sql.Connection = Depends(get_db),
+    customer_id: int,
+    customer_data: CustomerUpdateRequest,
+    db: sql.Connection = Depends(get_db),
 ):
     customer = db.execute(
-        "SELECT * FROM customers WHERE customerid = ?", (customer_id,)
+        "SELECT * FROM customers WHERE customerid = ?;", (customer_id,)
     ).fetchone()
     if not customer:
         raise HTTPException(
@@ -117,13 +119,14 @@ async def update_customer(
     command = (
         f"UPDATE customers SET "
         f"{', '.join(f'{key}=:{key}' for key in customer_data)} "
-        f"WHERE customerid=:customerid"
+        f"WHERE customerid=:customerid;"
     )
     print(command)
     db.execute(command, dict(customerid=customer_id, **customer_data))
     db.commit()
     updated = {
-        key: customer_data[key.lower()] for key in customer.keys()
+        key: customer_data[key.lower()]
+        for key in customer.keys()
         if key.lower() in customer_data
     }
     return dict(customer, **updated)
