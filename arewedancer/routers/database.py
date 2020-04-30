@@ -134,11 +134,12 @@ async def update_customer(
 
 def customers_sales(db):
     expences = db.execute(
-        "SELECT c.customerid, c.email, c.phone, i.total "
+        "SELECT c.customerid, c.email, c.phone, ROUND(SUM(i.total), 2) as number "
         "FROM customers c "
         "INNER JOIN invoices i "
         "ON c.customerid = i.customerid "
-        "ORDER BY i.total DESC, c.customerid;"
+        "GROUP BY c.customerid "
+        "ORDER BY number DESC, c.customerid;"
     ).fetchall()
     return [CustomerExpense(**entry).dict(by_alias=False) for entry in expences]
 

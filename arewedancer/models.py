@@ -61,7 +61,7 @@ class CustomerExpense(BaseModel):
     CustomerId: int
     Email: str
     Phone: Optional[str]
-    Sum: float = Field(..., alias="Total")
+    Sum: float = Field(..., alias="number")
 
 
 class GenreSales(BaseModel):
