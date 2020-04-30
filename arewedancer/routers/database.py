@@ -4,7 +4,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from ..models import Track, Album, NewAlbumRequest, Customer, CustomerUpdateRequest
+from ..models import Track, Album, NewAlbumRequest, Customer, CustomerUpdateRequest, \
+    CustomerExpense
 
 router = APIRouter()
 router.db_connection = None
@@ -124,3 +125,34 @@ async def update_customer(
         if key.lower() in customer_data
     }
     return dict(customer, **updated)
+
+
+def customers_sales(db):
+    expences = db.execute(
+        "SELECT c.customerid, c.email, c.phone, i.total "
+        "FROM customers c "
+        "INNER JOIN invoices i "
+        "ON c.customerid = i.customerid "
+        "ORDER BY i.total DESC, c.customerid;"
+    ).fetchall()
+    return expences
+
+
+SALES_OPERATIONS = {
+    "customers": customers_sales
+}
+
+
+@router.get(
+    "/sales",
+    response_model=List[CustomerExpense],
+    response_model_by_alias=False,
+)
+async def sales(category: str, db: sql.Connection = Depends(get_db)):
+    try:
+        return SALES_OPERATIONS[category](db)
+    except KeyError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": {"error": f"Unknown category: {category}"}},
+        )

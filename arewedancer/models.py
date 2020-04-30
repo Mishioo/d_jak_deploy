@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Patient(BaseModel):
@@ -55,3 +55,10 @@ class Customer(BaseModel):
     Fax: str
     Email: str
     SupportRepId: int
+
+
+class CustomerExpense(BaseModel):
+    CustomerId: int
+    Email: str
+    Phone: Optional[str]
+    Sum: float = Field(..., alias="Total")
